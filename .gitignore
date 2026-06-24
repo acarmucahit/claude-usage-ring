@@ -1,4 +1,8 @@
 .build/
 *.app
+*.app.zip
 DerivedData/
 .DS_Store
+
+# Personal/local notes — never commit
+CLAUDE.local.md
