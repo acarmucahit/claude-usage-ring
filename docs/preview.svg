@@ -1,0 +1,65 @@
+<svg width="760" height="380" viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c1c22"/>
+      <stop offset="1" stop-color="#121216"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <rect width="760" height="380" fill="url(#bg)"/>
+
+  <!-- Menu bar strip -->
+  <rect x="0" y="0" width="760" height="34" fill="#000000" opacity="0.35"/>
+  <!-- mini-bars icon -->
+  <rect x="612" y="13" width="26" height="4" rx="2" fill="#8a8a8f" opacity="0.45"/>
+  <rect x="612" y="13" width="5"  height="4" rx="2" fill="#4ec872"/>
+  <rect x="612" y="20" width="26" height="4" rx="2" fill="#8a8a8f" opacity="0.45"/>
+  <rect x="612" y="20" width="4"  height="4" rx="2" fill="#4ec872"/>
+  <text x="646" y="22" fill="#f2f2f5" font-size="13" font-weight="500">16%</text>
+  <circle cx="700" cy="17" r="6" fill="#8a8a8f" opacity="0.4"/>
+  <circle cx="724" cy="17" r="6" fill="#8a8a8f" opacity="0.4"/>
+
+  <!-- Dropdown panel -->
+  <g filter="url(#shadow)">
+    <rect x="470" y="44" width="270" height="250" rx="14" fill="#26262d" stroke="#3a3a44" stroke-width="1"/>
+
+    <!-- 5 hour -->
+    <text x="490" y="78" fill="#f2f2f5" font-size="13" font-weight="600">5-hour</text>
+    <text x="710" y="78" fill="#4ec872" font-size="13" font-weight="700" text-anchor="end">16%</text>
+    <rect x="490" y="86" width="220" height="6" rx="3" fill="#4ec872" opacity="0.16"/>
+    <rect x="490" y="86" width="35"  height="6" rx="3" fill="#4ec872"/>
+    <text x="490" y="108" fill="#9a9aa2" font-size="10">Resets in 3h 44m</text>
+
+    <!-- weekly -->
+    <text x="490" y="140" fill="#f2f2f5" font-size="13" font-weight="600">Weekly</text>
+    <text x="710" y="140" fill="#4ec872" font-size="13" font-weight="700" text-anchor="end">13%</text>
+    <rect x="490" y="148" width="220" height="6" rx="3" fill="#4ec872" opacity="0.16"/>
+    <rect x="490" y="148" width="29"  height="6" rx="3" fill="#4ec872"/>
+    <text x="490" y="170" fill="#9a9aa2" font-size="10">Resets in 5d 1h</text>
+
+    <line x1="490" y1="190" x2="720" y2="190" stroke="#3a3a44" stroke-width="1"/>
+    <text x="490" y="210" fill="#9a9aa2" font-size="11">Block: $43.48  ·  🔥 $34/hr</text>
+    <line x1="490" y1="226" x2="720" y2="226" stroke="#3a3a44" stroke-width="1"/>
+
+    <rect x="490" y="240" width="74" height="26" rx="6" fill="#34343d"/>
+    <text x="500" y="257" fill="#d8d8de" font-size="11">60s ⌄</text>
+    <rect x="648" y="240" width="62" height="26" rx="6" fill="#34343d"/>
+    <text x="679" y="257" fill="#d8d8de" font-size="11" text-anchor="middle">Quit</text>
+  </g>
+
+  <!-- Caption -->
+  <text x="40" y="150" fill="#f2f2f5" font-size="30" font-weight="700">Claude Usage Ring</text>
+  <text x="40" y="184" fill="#b8b8c0" font-size="15">Live 5-hour &amp; weekly Claude Code</text>
+  <text x="40" y="206" fill="#b8b8c0" font-size="15">usage limits — right in your menu bar.</text>
+  <g>
+    <rect x="40" y="232" width="13" height="13" rx="3" fill="#4ec872"/>
+    <text x="62" y="243" fill="#9a9aa2" font-size="12">&lt; 50% safe</text>
+    <rect x="150" y="232" width="13" height="13" rx="3" fill="#f2c433"/>
+    <text x="172" y="243" fill="#9a9aa2" font-size="12">50–80% watch</text>
+    <rect x="280" y="232" width="13" height="13" rx="3" fill="#eb5757"/>
+    <text x="302" y="243" fill="#9a9aa2" font-size="12">&gt; 80% near limit</text>
+  </g>
+</svg>
