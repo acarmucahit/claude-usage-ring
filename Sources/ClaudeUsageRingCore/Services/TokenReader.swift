@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(Security)
+import Security
+#endif
 
 public enum TokenError: Error, Equatable {
     case notFound
@@ -37,21 +40,30 @@ public struct TokenReader: Sendable {
         return nil
     }
 
-    // Live reader: Keychain via `security`, then ~/.claude/.credentials.json.
+    /// Keychain service name Claude Code stores its credentials under.
+    public static let keychainService = "Claude Code-credentials"
+
+    // Live reader: Keychain via the Security framework, then
+    // ~/.claude/.credentials.json. Reading the item directly (rather than via
+    // the `security` CLI) attributes the macOS consent prompt to this app, so
+    // a signed build shows a real identity and "Always Allow" persists.
     public static let live = TokenReader(
         keychainReader: {
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/usr/bin/security")
-            p.arguments = ["find-generic-password", "-s", "Claude Code-credentials", "-w"]
-            let pipe = Pipe()
-            p.standardOutput = pipe
-            p.standardError = Pipe()
-            do { try p.run() } catch { return nil }
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            p.waitUntilExit()
-            guard p.terminationStatus == 0 else { return nil }
+            #if canImport(Security)
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: TokenReader.keychainService,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne,
+            ]
+            var item: CFTypeRef?
+            let status = SecItemCopyMatching(query as CFDictionary, &item)
+            guard status == errSecSuccess, let data = item as? Data else { return nil }
             let s = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
             return s.isEmpty ? nil : s
+            #else
+            return nil
+            #endif
         },
         fileReader: {
             let path = (NSString(string: "~/.claude/.credentials.json").expandingTildeInPath)

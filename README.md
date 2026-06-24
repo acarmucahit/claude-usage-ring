@@ -65,6 +65,24 @@ the `/usage` panel.
 - Utilization is reported on a 0–100 scale; the app reads the authoritative
   `limits` array and falls back to the `five_hour` / `seven_day` objects.
 
+## Privacy & trust
+
+This app touches your Claude session token, so here's exactly what happens —
+and why you can verify it yourself:
+
+- **The token never leaves your machine except to Anthropic.** It's sent only in
+  the `Authorization` header to `api.anthropic.com`, the same as Claude Code.
+  There is no analytics, no telemetry, no other network call. Read the entire
+  networking layer: [`UsageClient.swift`](Sources/ClaudeUsageRingCore/Services/UsageClient.swift)
+  and [`TokenReader.swift`](Sources/ClaudeUsageRingCore/Services/TokenReader.swift).
+- **Why the Keychain prompt?** macOS asks because the app reads the
+  `Claude Code-credentials` item that Claude Code created. Click **Allow** (or
+  **Always Allow** to silence it). This is macOS protecting your token — exactly
+  what you'd want. Signed & notarized release builds show a verified identity in
+  this prompt and pass Gatekeeper without warnings.
+- **Open source, build it yourself.** If you'd rather not trust a download, the
+  [build-from-source](#build-from-source) path is two commands.
+
 ## Build from source
 
 ```bash
