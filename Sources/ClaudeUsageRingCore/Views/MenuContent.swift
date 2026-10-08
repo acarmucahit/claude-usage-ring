@@ -1,4 +1,5 @@
 import SwiftUI
+import ServiceManagement
 
 public struct MenuContent: View {
     @ObservedObject private var store: UsageStore
@@ -12,10 +13,10 @@ public struct MenuContent: View {
     }
 
     public var body: some View {
+        let now = Date()
         VStack(alignment: .leading, spacing: 12) {
             switch store.state {
             case .ok(let snap):
-                let now = Date()
                 UsageBar(title: "5-hour", window: snap.fiveHour, now: now)
                 UsageBar(title: "Weekly", window: snap.weekly, now: now)
             case .loading:
@@ -23,6 +24,20 @@ public struct MenuContent: View {
             case .failed(let msg):
                 Label(msg, systemImage: "exclamationmark.triangle")
                     .font(.system(size: 12)).foregroundStyle(.secondary)
+            }
+
+            if case .ok = store.state {
+                VStack(alignment: .leading, spacing: 2) {
+                    if let at = store.lastSuccessAt {
+                        Text(now.timeIntervalSince(at) < 60
+                             ? "Updated just now"
+                             : "Updated \(CountdownFormatter.string(from: at, to: now)) ago")
+                    }
+                    if let err = store.lastError {
+                        Label(err, systemImage: "exclamationmark.triangle")
+                    }
+                }
+                .font(.system(size: 10)).foregroundStyle(.secondary)
             }
 
             if let b = store.block {
@@ -41,16 +56,22 @@ public struct MenuContent: View {
                 Picker("Refresh", selection: Binding(
                     get: { settings.refreshInterval },
                     set: { settings.refreshInterval = SettingsModel.clamp($0) })) {
-                    Text("60s").tag(60.0)
                     Text("2m").tag(120.0)
                     Text("5m").tag(300.0)
+                    Text("15m").tag(900.0)
                 }
                 .pickerStyle(.menu).labelsHidden().frame(width: 80)
                 Spacer()
                 Button("Quit", action: quit)
             }
-            Toggle("Launch at login", isOn: $settings.launchAtLogin)
+            Toggle("Launch at login", isOn: Binding(
+                get: { settings.launchAtLogin },
+                set: { settings.setLaunchAtLogin($0) }))
                 .font(.system(size: 11)).toggleStyle(.checkbox)
+            if settings.launchAtLoginNeedsApproval {
+                Button("Approve in Login Items…") { SMAppService.openSystemSettingsLoginItems() }
+                    .font(.system(size: 11))
+            }
         }
         .padding(14)
         .frame(width: 260)

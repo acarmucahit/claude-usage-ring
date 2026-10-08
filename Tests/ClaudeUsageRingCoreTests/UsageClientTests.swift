@@ -30,6 +30,15 @@ final class UsageClientTests: XCTestCase {
         XCTAssertEqual(box.value, "Bearer tok-123")
     }
 
+    func testSendsOAuthBetaHeaderLikeClaudeCode() async throws {
+        let json = Data(#"{ "five_hour": { "utilization": 1.0 } }"#.utf8)
+        let box = AuthBox()
+        let now = self.now
+        let transport = HeaderTransport(data: json) { box.value = $0.value(forHTTPHeaderField: "anthropic-beta") }
+        _ = try await UsageClient(tokenProvider: { "t" }, transport: transport, now: { now }).fetch()
+        XCTAssertEqual(box.value, "oauth-2025-04-20")
+    }
+
     func testUnauthorizedMapsToError() async {
         let now = self.now
         let transport = StubTransport(data: Data("{}".utf8), status: 401)
@@ -40,3 +49,12 @@ final class UsageClientTests: XCTestCase {
 }
 
 final class AuthBox: @unchecked Sendable { var value: String? }
+
+private struct HeaderTransport: Transport {
+    let data: Data
+    let inspect: @Sendable (URLRequest) -> Void
+    func send(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        inspect(request)
+        return (data, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+    }
+}

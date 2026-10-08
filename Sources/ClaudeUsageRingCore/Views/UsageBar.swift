@@ -12,12 +12,13 @@ public struct UsageBar: View {
     }
 
     public var body: some View {
-        let level = RingLevel(utilization: window.utilization)
+        let utilization = window.utilization(at: now)
+        let level = RingLevel(utilization: utilization)
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(title).font(.system(size: 12, weight: .semibold))
                 Spacer()
-                Text("\(Int((window.utilization * 100).rounded()))%")
+                Text("\(Int((utilization * 100).rounded()))%")
                     .font(.system(size: 12, weight: .semibold)).monospacedDigit()
                     .foregroundStyle(level.color)
             }
@@ -25,12 +26,16 @@ public struct UsageBar: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(level.color.opacity(0.15))
                     Capsule().fill(level.color)
-                        .frame(width: geo.size.width * RingGeometry.trimEnd(for: window.utilization))
+                        .frame(width: geo.size.width * RingGeometry.trimEnd(for: utilization))
                 }
             }
             .frame(height: 6)
-            Text("Resets in \(CountdownFormatter.string(from: now, to: window.resetsAt))")
-                .font(.system(size: 10)).foregroundStyle(.secondary)
+            if let resetsAt = window.resetsAt {
+                Text(resetsAt > now
+                     ? "Resets in \(CountdownFormatter.string(from: now, to: resetsAt))"
+                     : "Reset — waiting for fresh data")
+                    .font(.system(size: 10)).foregroundStyle(.secondary)
+            }
         }
     }
 }

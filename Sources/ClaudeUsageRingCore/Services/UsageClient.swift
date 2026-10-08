@@ -36,6 +36,7 @@ public struct UsageClient: Sendable {
         req.timeoutInterval = 5
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
         let (data, resp) = try await transport.send(req)
         if let http = resp as? HTTPURLResponse {
             if http.statusCode == 401 { throw UsageError.unauthorized }

@@ -29,8 +29,11 @@ window resets.
 - ⏱️ **Reset countdowns** — "Resets in 3h 44m" / "Resets in 5d 1h".
 - 💸 **Optional spend line** — active block cost + burn rate via
   [ccusage](https://github.com/ryoppippi/ccusage), if installed.
-- 🪶 **Tiny & native** — SwiftUI `MenuBarExtra`, no Dock icon, polls every 60s
-  with automatic back-off on rate limits.
+- 🪶 **Tiny & native** — SwiftUI `MenuBarExtra`, no Dock icon, polls every
+  5 minutes with automatic back-off on rate limits, and refreshes on wake.
+- 🩶 **Honest when stale** — if updates stop (Claude Code signed out, rate
+  limited, offline), the bars turn grey and the menu shows when it last updated.
+- 🚀 **Starts at login** — turned on automatically the first time you open it.
 - 🔒 **Local only** — reads your existing Claude session token on your machine
   and talks directly to Anthropic. Nothing is sent anywhere else.
 
@@ -45,12 +48,14 @@ window resets.
    xattr -dr com.apple.quarantine /Applications/ClaudeUsageRing.app
    open /Applications/ClaudeUsageRing.app
    ```
-   (Or: right-click the app in Finder → **Open** → **Open**.)
-3. Two mini-bars appear in your menu bar. macOS may ask once for Keychain
-   access — click **Allow**.
+   (Or open it once, then allow it under System Settings → Privacy & Security
+   → **Open Anyway**.)
+3. Two mini-bars and the 5-hour % appear in your menu bar. There is no Keychain
+   dialog to answer.
 
-> **Requires** macOS 14+ and a **signed-in Claude Code** on the same machine.
-> The app reuses Claude Code's local session; it never asks you to log in.
+> **Requires** macOS 14+ on Apple Silicon and a **signed-in Claude Code** on the
+> same machine. The app reuses Claude Code's local session; it never asks you to
+> log in.
 
 ## How it works
 
@@ -58,6 +63,15 @@ The app reads Claude Code's local OAuth access token (first the macOS Keychain
 item `Claude Code-credentials`, then `~/.claude/.credentials.json`) and calls
 `GET https://api.anthropic.com/api/oauth/usage` — the same endpoint that powers
 the `/usage` panel.
+
+- The Keychain item is read with Apple's `/usr/bin/security` tool — the same way
+  Claude Code itself reads it. Claude Code writes the item with that tool, so
+  macOS already trusts it for this item and shows no dialog. (Reading the item
+  directly from the app made macOS ask for your password again every time
+  Claude Code refreshed its token.)
+- The app never refreshes or writes the token. If Claude Code's token has
+  expired, the app shows the last values greyed out with "open Claude Code to
+  resume" until Claude Code refreshes it.
 
 - The token is read **only on your machine** and sent **only** to Anthropic.
 - This endpoint is **undocumented**. If a Claude Code update changes the
@@ -75,11 +89,10 @@ and why you can verify it yourself:
   There is no analytics, no telemetry, no other network call. Read the entire
   networking layer: [`UsageClient.swift`](Sources/ClaudeUsageRingCore/Services/UsageClient.swift)
   and [`TokenReader.swift`](Sources/ClaudeUsageRingCore/Services/TokenReader.swift).
-- **Why the Keychain prompt?** macOS asks because the app reads the
-  `Claude Code-credentials` item that Claude Code created. Click **Allow** (or
-  **Always Allow** to silence it). This is macOS protecting your token — exactly
-  what you'd want. Signed & notarized release builds show a verified identity in
-  this prompt and pass Gatekeeper without warnings.
+- **Why is there no Keychain prompt?** The token is read through Apple's
+  `security` tool, which macOS already allows to read this item because Claude
+  Code stores it with that tool. The app gets the same access Claude Code has —
+  nothing more — and only reads that one item.
 - **Open source, build it yourself.** If you'd rather not trust a download, the
   [build-from-source](#build-from-source) path is two commands.
 
@@ -92,9 +105,9 @@ cd claude-usage-ring
 open ClaudeUsageRing.app
 ```
 
-Run with console logs:
+Check the data path from Terminal (one fetch, prints the numbers, exits):
 ```bash
-./ClaudeUsageRing.app/Contents/MacOS/ClaudeUsageRing
+./ClaudeUsageRing.app/Contents/MacOS/ClaudeUsageRing --check
 ```
 
 ## Development
@@ -117,8 +130,13 @@ with Anthropic.
 **Does it store or upload my token?** No. The token stays on your machine and
 is sent only to Anthropic's API, exactly like Claude Code itself.
 
-**The bars are grey / "Unexpected response format"?** The endpoint schema may
-have changed; please open an issue with the (redacted) response shape.
+**The bars are grey?** The numbers are older than 15 minutes. Open the menu to
+see why — usually Claude Code's sign-in expired (open Claude Code once) or
+Anthropic is rate limiting the usage endpoint (the app backs off by itself).
+`ClaudeUsageRing --check` prints the current values or the error.
+
+**"Unexpected response format"?** The endpoint schema may have changed; please
+open an issue with the (redacted) response shape.
 
 ## License
 

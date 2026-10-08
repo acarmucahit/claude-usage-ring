@@ -5,35 +5,46 @@ import ServiceManagement
 @MainActor
 public final class SettingsModel: ObservableObject {
     private static let intervalKey = "refreshInterval"
+    private static let loginOfferedKey = "launchAtLoginOffered"
+
+    private let defaults: UserDefaults
 
     @Published public var refreshInterval: Double {
-        didSet { UserDefaults.standard.set(refreshInterval, forKey: Self.intervalKey) }
+        didSet { defaults.set(refreshInterval, forKey: Self.intervalKey) }
     }
-    @Published public var launchAtLogin: Bool {
-        didSet { setLaunchAtLogin(launchAtLogin) }
+    /// Mirrors the real login-item status; change it with setLaunchAtLogin(_:).
+    @Published public private(set) var launchAtLogin: Bool
+    @Published public private(set) var launchAtLoginNeedsApproval = false
+
+    public init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        let stored = defaults.double(forKey: Self.intervalKey)
+        self.refreshInterval = stored > 0 ? Self.clamp(stored) : 300
+        self.launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 
-    public init() {
-        let stored = UserDefaults.standard.double(forKey: Self.intervalKey)
-        self.refreshInterval = stored > 0 ? Self.clamp(stored) : 60
-        if #available(macOS 13.0, *) {
-            self.launchAtLogin = SMAppService.mainApp.status == .enabled
-        } else {
-            self.launchAtLogin = false
-        }
-    }
-
+    /// The usage endpoint rate-limits polling at about a minute, so stay well above that.
     public static func clamp(_ seconds: Double) -> Double {
-        min(600, max(30, seconds))
+        min(1800, max(120, seconds))
+    }
+
+    /// The point of the app is to be always visible, so turn launch at login
+    /// on once; after that the user's choice in the menu wins.
+    public func enableLaunchAtLoginOnFirstRun() {
+        guard !defaults.bool(forKey: Self.loginOfferedKey) else { return }
+        defaults.set(true, forKey: Self.loginOfferedKey)
+        setLaunchAtLogin(true)
     }
 
     public func setLaunchAtLogin(_ on: Bool) {
-        guard #available(macOS 13.0, *) else { return }
         do {
             if on { try SMAppService.mainApp.register() }
             else { try SMAppService.mainApp.unregister() }
         } catch {
-            // Non-fatal: surfaced only in logs; toggle reflects attempted state.
+            NSLog("ClaudeUsageRing: launch at login %@ failed: %@", on ? "register" : "unregister", "\(error)")
         }
+        let status = SMAppService.mainApp.status
+        launchAtLogin = status == .enabled
+        launchAtLoginNeedsApproval = status == .requiresApproval
     }
 }
